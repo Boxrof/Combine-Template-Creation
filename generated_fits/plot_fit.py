@@ -14,7 +14,10 @@ mpl.rcParams['lines.linewidth'] = 2
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('files', nargs='+')
-    parser.add_argument('-b', '--branches', nargs='+', default=['RF'])
+    parser.add_argument('-b', '--branches', nargs='+', default=['RF'],
+                        help="The branches you want to plot")
+    parser.add_argument('-c', '--clean', action="store_false",
+                        help="Activate this if you want all your plots on the same canvas")
     args = parser.parse_args()
     
     
@@ -26,15 +29,24 @@ if __name__ == "__main__":
         file_data = [file['limit'].arrays(args.branches + ['deltaNLL'], library='pd') for file in files]
         
         for element in args.branches:
-            plt.cla()
+            if args.clean:
+                plt.cla()
             for data, name in zip(file_data, args.files):
                 data.sort_values(element, inplace=True, ignore_index=True)
-                plt.plot(data[element], 2*data['deltaNLL'], lw=2, label=name)
+                labelstr = name if args.clean else element
+                plt.plot(data[element], 2*data['deltaNLL'], lw=2, label=labelstr)
                 
             plt.gca().axhline(color='black', lw=2)
             plt.gca().axvline(color='black', lw=2)
             plt.grid(True)
             plt.ylabel(r'$2\times\Delta NLL$')
-            plt.xlabel(element)
+            if args.clean:
+                plt.xlabel(element)
             plt.legend(loc='upper right')
-            plt.savefig(element + '.png')
+            if args.clean:
+                plt.tight_layout()
+                plt.savefig(element + '.png')
+                
+        if not args.clean:
+            plt.tight_layout()
+            plt.savefig('Everything.png')

@@ -411,30 +411,30 @@ class Interf_Reso_template_creator_1D(Template_Creator_1D):
         
         with uproot.recreate(self.output_directory + self.fname + ".root") as f:
             
-            self.signals["BW1"] = (np.array(BW1_0_0), area1)
+            self.signals["BW1"] = (np.array(BW1_0_0), CS_BW1)
             
             BW1_0_0, bins = np.histogram(BW1_0_0, bins=nbins, range=(lowerlim, upperlim))            
             BW1_0_0 = Template_helper_methods.scale(BW1_0_0, CS_BW1)
             if np.any(BW1_0_0): #checks if the array is nonzero at any point
-                temp = Template_helper_methods.scale(BW1_0_0, area1)
-                f["ggH_0PM_BW1"] = (temp, bins)
-                self.scaled_signals["BW1"] = (temp, bins)
+                # BW1_0_0 = Template_helper_methods.scale(BW1_0_0, area1)
+                f["ggH_0PM_BW1"] = (BW1_0_0, bins)
+                self.scaled_signals["BW1"] = (BW1_0_0, bins)
             
-            self.signals["BW2_0_0"] = (np.array(BW2_0_0), area2)
+            self.signals["BW2_0_0"] = (np.array(BW2_0_0), CS_BW2)
             BW2_0_0, _ = np.histogram(BW2_0_0, bins=bins, range=(lowerlim, upperlim))
             BW2_0_0 = Template_helper_methods.scale(BW2_0_0, CS_BW2)
             if np.any(BW2_0_0):
-                temp = Template_helper_methods.scale(BW2_0_0, area2)
-                f["ggH_0PM_BW2"] = (temp, bins)
-                self.scaled_signals["BW2"] = (temp, bins)
+                # BW2_0_0 = Template_helper_methods.scale(BW2_0_0, area2)
+                f["ggH_0PM_BW2"] = (BW2_0_0, bins)
+                self.scaled_signals["BW2"] = (BW2_0_0, bins)
             
-            self.signals["BW3"] = (np.array(BW3_0_0), area3)
+            self.signals["BW3"] = (np.array(BW3_0_0), CS_BW3)
             BW3_0_0, _ = np.histogram(BW3_0_0, bins=bins, range=(lowerlim, upperlim))
             BW3_0_0 = Template_helper_methods.scale(BW3_0_0, CS_BW3)
             if np.any(BW3_0_0):
-                temp = Template_helper_methods.scale(BW3_0_0, area3)
-                f["ggH_0PM_BW3"] = (temp, bins)
-                self.scaled_signals["BW3"] = (temp, bins)
+                # BW3_0_0 = Template_helper_methods.scale(BW3_0_0, area3)
+                f["ggH_0PM_BW3"] = (BW3_0_0, bins)
+                self.scaled_signals["BW3"] = (BW3_0_0, bins)
             
             interfList = [BW12_0_0, BW12_05_0, BW13_0_0, BW13_0_05, BW23_0_0, BW23_0_05] #list of all the interference terms
             interfCSList = [CS_BW12_0_0, CS_BW12_05_0, CS_BW13_0_0, CS_BW13_0_05, CS_BW23_0_0, CS_BW23_0_05]
@@ -442,26 +442,26 @@ class Interf_Reso_template_creator_1D(Template_Creator_1D):
                 
                 interference_term, _ = np.histogram(interference_term, bins=bins, range=(lowerlim, upperlim))
                 interference_term = Template_helper_methods.scale(interference_term, interfCSList[n])
-                
-                interf_area = 0
-                
+                                
                 if "12" in string_forms[n + 3]:
-                    interf_area = np.sqrt(area1*area2)
-                    self.signals[string_forms[n+3]] = (np.array(interference_term), interf_area)
+                    # interf_area = area1 + area2 + np.sqrt(area1*area2)
+                    self.signals[string_forms[n+3]] = (np.array(interference_term), interfCSList[n])
                     
+                    interference_term = Template_helper_methods.scale(interference_term, interfCSList[n])
                     interference_term -= BW1_0_0 + BW2_0_0
                 elif "13" in string_forms[n + 3]:
-                    interf_area = np.sqrt(area1*area3)
-                    self.signals[string_forms[n+3]] = (np.array(interference_term), interf_area)
+                    # interf_area = area1 + area3 + np.sqrt(area1*area3)
+                    self.signals[string_forms[n+3]] = (np.array(interference_term), interfCSList[n])
                     
+                    interference_term = Template_helper_methods.scale(interference_term, interfCSList[n])
                     interference_term -= BW1_0_0 + BW3_0_0
                 else:
-                    interf_area = np.sqrt(area2*area3)
-                    self.signals[string_forms[n+3]] = (np.array(interference_term), interf_area)
+                    # interf_area = area2 + area3 + np.sqrt(area2*area3)
+                    self.signals[string_forms[n+3]] = (np.array(interference_term), interfCSList[n])
                     
+                    interference_term = Template_helper_methods.scale(interference_term, interfCSList[n])
                     interference_term -= BW2_0_0 + BW3_0_0
                 
-                interference_term = Template_helper_methods.scale(interference_term, interf_area)
                 self.scaled_signals[string_forms[n+3]] = (interference_term, bins)
                 
                 
