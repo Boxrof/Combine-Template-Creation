@@ -5,45 +5,31 @@ import uproot
 import numpy as np
 
 
-def scale(counts, scaleto):
+def scale(scaleto, counts, bins=[]):
     """This function scales histograms according to their absolute area under the curve (no negatives allowed!)
 
     Parameters
     ----------
-    counts : list[Union[int, float]]
-        A list of bin counts
     scaleto : float
         The absolute area to scale to
-
+    counts : list[Union[int,float]]
+        A list of bin counts
+    bins : list[float]
+        The bins you want to use; use this option if you are passing a numpy histogram in (i.e. scale(1, *<numpy histogram>)), by default None
     Returns
     -------
-    numpy.ndarray
-        The scaled histogram counts
+    list[float]/Tuple(list[float], list[float])
+        The scaled histogram bin counts or the scaled histogram, depending on whether you passed the bins in as well
     """
     counts = np.array(counts)
     counts = counts.astype(float)
     signs = np.sign(counts) #makes sure to preserve sign
     counts = np.abs(counts)
     
+    if any(bins):
+        return signs*counts*scaleto/np.sum(counts), bins
+    
     return signs*counts*scaleto/np.sum(counts)
-
-def extract_branches_from_TTree(ROOT_file, *args):
-    with uproot.open(ROOT_file) as f:
-        f = f[f.keys()[0]]
-        branches_as_numpy_arrays = []
-        for branch in args:
-            branches_as_numpy_arrays.append(f[branch].array(library='np'))
-            
-        return branches_as_numpy_arrays
-
-def name_correctly(interf_probability):
-    parsing_list = interf_probability.split('_')
-    named_str = "ggH_"
-    for n, string in enumerate(parsing_list):
-        if "ghzpzp" in string:
-            named_str += "g" + string[-1]
-            named_str += parsing_list[n+1]
-    return named_str
 
 def Unroll_2D_OnShell(directory, fname):
     """Code written by Jeffrey Davis of happy hour cocktail fame to unroll a 2 dimensional histogram

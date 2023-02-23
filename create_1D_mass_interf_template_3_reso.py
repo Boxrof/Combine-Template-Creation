@@ -61,6 +61,7 @@ if __name__ == "__main__":
                         help="The areas for each background")
     parser.add_argument('-a', '--areas', nargs=3, type=float,
                         help="The areas for the three signals")
+    parser.add_argument('-os', '--outScaled', nargs=5, default=[])
     args = parser.parse_args()
     
     """
@@ -107,6 +108,10 @@ if __name__ == "__main__":
                                                      *list(map(data_samples.get,insertionList)),
                                                      *list(map(cross_section_samples.get, insertionList)),
                                                      args.nbins, *args.areas)
-    Three_BW_Creation.create_datacards()
-    Three_BW_Creation.stackPlot()
-    Three_BW_Creation.plot_overall_interference()
+    if args.outScaled:
+        Three_BW_Creation.histo_based_on_params(*args.outScaled)
+    else:
+        Three_BW_Creation.dump()
+        Three_BW_Creation.create_datacards()
+        Three_BW_Creation.stackPlot()
+        Three_BW_Creation.plot_overall_interference()

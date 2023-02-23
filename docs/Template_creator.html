@@ -11,11 +11,10 @@
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -43,7 +42,31 @@
     
               <!-- Local TOC -->
               <div class="local-toc"><ul>
-<li><a class="reference internal" href="#">Template_creator module</a></li>
+<li><a class="reference internal" href="#">Template_creator module</a><ul>
+<li><a class="reference internal" href="#Template_creator.Interf_Coupling_template_creator"><code class="docutils literal notranslate"><span class="pre">Interf_Coupling_template_creator</span></code></a></li>
+<li><a class="reference internal" href="#Template_creator.Interf_Reso_template_creator_1D"><code class="docutils literal notranslate"><span class="pre">Interf_Reso_template_creator_1D</span></code></a><ul>
+<li><a class="reference internal" href="#Template_creator.Interf_Reso_template_creator_1D.dump"><code class="docutils literal notranslate"><span class="pre">Interf_Reso_template_creator_1D.dump()</span></code></a></li>
+<li><a class="reference internal" href="#Template_creator.Interf_Reso_template_creator_1D.histo_based_on_params"><code class="docutils literal notranslate"><span class="pre">Interf_Reso_template_creator_1D.histo_based_on_params()</span></code></a></li>
+<li><a class="reference internal" href="#Template_creator.Interf_Reso_template_creator_1D.plot_overall_interference"><code class="docutils literal notranslate"><span class="pre">Interf_Reso_template_creator_1D.plot_overall_interference()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#Template_creator.Significance_Hypothesis_template_creator_1D"><code class="docutils literal notranslate"><span class="pre">Significance_Hypothesis_template_creator_1D</span></code></a></li>
+<li><a class="reference internal" href="#Template_creator.Template_Creator_1D"><code class="docutils literal notranslate"><span class="pre">Template_Creator_1D</span></code></a><ul>
+<li><a class="reference internal" href="#Template_creator.Template_Creator_1D.scale_and_add_bkgs"><code class="docutils literal notranslate"><span class="pre">Template_Creator_1D.scale_and_add_bkgs()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#Template_creator.Template_Creator_2D"><code class="docutils literal notranslate"><span class="pre">Template_Creator_2D</span></code></a><ul>
+<li><a class="reference internal" href="#Template_creator.Template_Creator_2D.scale_and_add_bkgs"><code class="docutils literal notranslate"><span class="pre">Template_Creator_2D.scale_and_add_bkgs()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#Template_creator.Template_creator"><code class="docutils literal notranslate"><span class="pre">Template_creator</span></code></a><ul>
+<li><a class="reference internal" href="#Template_creator.Template_creator.create_datacards"><code class="docutils literal notranslate"><span class="pre">Template_creator.create_datacards()</span></code></a></li>
+<li><a class="reference internal" href="#Template_creator.Template_creator.scale_and_add_bkgs"><code class="docutils literal notranslate"><span class="pre">Template_creator.scale_and_add_bkgs()</span></code></a></li>
+<li><a class="reference internal" href="#Template_creator.Template_creator.stackPlot"><code class="docutils literal notranslate"><span class="pre">Template_creator.stackPlot()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </div>
     <a href="index.html">Home Page</a>
@@ -148,6 +171,36 @@
 </ul>
 </dd>
 </dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="Template_creator.Interf_Reso_template_creator_1D.dump">
+<span class="sig-name descname"><span class="pre">dump</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Template_creator.html#Interf_Reso_template_creator_1D.dump"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Template_creator.Interf_Reso_template_creator_1D.dump" title="Permalink to this definition"></a></dt>
+<dd><p>Dumps the created items in a file at self.output_directory/self.fname</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="Template_creator.Interf_Reso_template_creator_1D.histo_based_on_params">
+<span class="sig-name descname"><span class="pre">histo_based_on_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi23</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Template_creator.html#Interf_Reso_template_creator_1D.histo_based_on_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Template_creator.Interf_Reso_template_creator_1D.histo_based_on_params" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a histogram based on the 5 parameters that are fitted in the template
+While not necessarily part of creating the template, this is a useful place to put this function</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>f1</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – The fraction for BW1</p></li>
+<li><p><strong>f2</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – The fraction for BW2</p></li>
+<li><p><strong>f3</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – The fraction for BW3</p></li>
+<li><p><strong>phi12</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – The phase between BW1 and BW2</p></li>
+<li><p><strong>phi23</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – The phase between BW2 and BW3</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A numpy histogram of everything</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)">float</a>], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)">float</a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="Template_creator.Interf_Reso_template_creator_1D.plot_overall_interference">
 <span class="sig-name descname"><span class="pre">plot_overall_interference</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/Template_creator.html#Interf_Reso_template_creator_1D.plot_overall_interference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Template_creator.Interf_Reso_template_creator_1D.plot_overall_interference" title="Permalink to this definition"></a></dt>
@@ -286,6 +339,9 @@ It serves to bin and scale the backgrounds given to their respective areas, then
 <li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether you would like verbosity, by default False</p></li>
 <li><p><strong>clean</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether you would like to wipe your output folders before putting anything else in them, by default True</p></li>
 </ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#FileNotFoundError" title="(in Python v3.11)"><strong>FileNotFoundError</strong></a> – If there is no file, raises an error</p>
 </dd>
 </dl>
 </dd></dl>

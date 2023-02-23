@@ -11,3 +11,4 @@ Combine-Template-Creation
    Template_creator
    Template_helper_methods
    create_1D_mass_interf_template_3_reso
+   plot_fit

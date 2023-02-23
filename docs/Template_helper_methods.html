@@ -11,11 +11,10 @@
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -43,7 +42,11 @@
     
               <!-- Local TOC -->
               <div class="local-toc"><ul>
-<li><a class="reference internal" href="#">Template_helper_methods module</a></li>
+<li><a class="reference internal" href="#">Template_helper_methods module</a><ul>
+<li><a class="reference internal" href="#Template_helper_methods.Unroll_2D_OnShell"><code class="docutils literal notranslate"><span class="pre">Unroll_2D_OnShell()</span></code></a></li>
+<li><a class="reference internal" href="#Template_helper_methods.scale"><code class="docutils literal notranslate"><span class="pre">scale()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div>
     <a href="index.html">Home Page</a>
@@ -92,31 +95,22 @@
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="Template_helper_methods.extract_branches_from_TTree">
-<span class="sig-prename descclassname"><span class="pre">Template_helper_methods.</span></span><span class="sig-name descname"><span class="pre">extract_branches_from_TTree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ROOT_file</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Template_helper_methods.html#extract_branches_from_TTree"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Template_helper_methods.extract_branches_from_TTree" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="Template_helper_methods.name_correctly">
-<span class="sig-prename descclassname"><span class="pre">Template_helper_methods.</span></span><span class="sig-name descname"><span class="pre">name_correctly</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interf_probability</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Template_helper_methods.html#name_correctly"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Template_helper_methods.name_correctly" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="Template_helper_methods.scale">
-<span class="sig-prename descclassname"><span class="pre">Template_helper_methods.</span></span><span class="sig-name descname"><span class="pre">scale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">counts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaleto</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Template_helper_methods.html#scale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Template_helper_methods.scale" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">Template_helper_methods.</span></span><span class="sig-name descname"><span class="pre">scale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scaleto</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">counts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Template_helper_methods.html#scale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Template_helper_methods.scale" title="Permalink to this definition"></a></dt>
 <dd><p>This function scales histograms according to their absolute area under the curve (no negatives allowed!)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>counts</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em><em>]</em>) – A list of bin counts</p></li>
 <li><p><strong>scaleto</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – The absolute area to scale to</p></li>
+<li><p><strong>counts</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>,</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em><em>]</em>) – A list of bin counts</p></li>
+<li><p><strong>bins</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em>) – The bins you want to use; use this option if you are passing a numpy histogram in (i.e. scale(1, <a href="#id1"><span class="problematic" id="id2">*</span></a>&lt;numpy histogram&gt;)), by default None</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The scaled histogram counts</p>
+<dd class="field-even"><p>The scaled histogram bin counts or the scaled histogram, depending on whether you passed the bins in as well</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.24)">numpy.ndarray</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)">float</a>]/Tuple(<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)">float</a>], <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)">list</a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)">float</a>])</p>
 </dd>
 </dl>
 </dd></dl>
