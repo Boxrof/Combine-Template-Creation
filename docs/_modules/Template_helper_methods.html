@@ -78,7 +78,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 
-<div class="viewcode-block" id="scale"><a class="viewcode-back" href="../Template_helper_methods.html#Template_helper_methods.scale">[docs]</a><span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="n">scaleto</span><span class="p">,</span> <span class="n">counts</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="p">[]):</span>
+<div class="viewcode-block" id="scale"><a class="viewcode-back" href="../Template_helper_methods.html#Template_helper_methods.scale">[docs]</a><span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="n">scaleto</span><span class="p">,</span> <span class="n">counts</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="p">[],</span> <span class="n">return_scale_factor</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This function scales histograms according to their absolute area under the curve (no negatives allowed!)</span>
 
 <span class="sd">    Parameters</span>
@@ -89,6 +89,8 @@
 <span class="sd">        A list of bin counts</span>
 <span class="sd">    bins : list[float]</span>
 <span class="sd">        The bins you want to use; use this option if you are passing a numpy histogram in (i.e. scale(1, *&lt;numpy histogram&gt;)), by default None</span>
+<span class="sd">    return_scale_factor : bool</span>
+<span class="sd">        Whether the scale factor being used will be returned</span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    list[float]/Tuple(list[float], list[float])</span>
@@ -100,7 +102,12 @@
     <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
     
     <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">bins</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">return_scale_factor</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">signs</span><span class="o">*</span><span class="n">counts</span><span class="o">*</span><span class="n">scaleto</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">counts</span><span class="p">),</span> <span class="n">bins</span><span class="p">,</span> <span class="n">scaleto</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">signs</span><span class="o">*</span><span class="n">counts</span><span class="o">*</span><span class="n">scaleto</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">counts</span><span class="p">),</span> <span class="n">bins</span>
+    
+    <span class="k">elif</span> <span class="n">return_scale_factor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">signs</span><span class="o">*</span><span class="n">counts</span><span class="o">*</span><span class="n">scaleto</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">counts</span><span class="p">),</span> <span class="n">scaleto</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
     
     <span class="k">return</span> <span class="n">signs</span><span class="o">*</span><span class="n">counts</span><span class="o">*</span><span class="n">scaleto</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span></div>
 

@@ -3,9 +3,42 @@ import ROOT
 import shutil
 import uproot
 import numpy as np
+import argparse
+
+def CombineParam(s):
+    """Checks whether the argument you are passing is of form <Param Name>=<Param Numerical Value>
+        Used as a type for argparse arguments i.e. parser.add_argument(--f, type=CombineParam)
+        
+    Parameters
+    ----------
+    s : str
+        The argument being passed
+
+    Returns
+    -------
+    str
+        If the argument looks fine return the string as is
+
+    Raises
+    ------
+    argparse.ArgumentTypeError
+        Only one term should be on either side of the equals sign
+    argparse.ArgumentTypeError
+        Param value should be castable to a float
+    """
+    check = s.split('=')
+    if len(check) != 2:
+        raise argparse.ArgumentTypeError("Format should be <Param Name>=<Param Numerical Value>")
+    
+    try:
+        float(check[1])
+    except:
+        raise argparse.ArgumentTypeError("Format should be <Param Name>=<Param Numerical Value>")
+    
+    return s
 
 
-def scale(scaleto, counts, bins=[]):
+def scale(scaleto, counts, bins=[], return_scale_factor=False):
     """This function scales histograms according to their absolute area under the curve (no negatives allowed!)
 
     Parameters
@@ -16,6 +49,9 @@ def scale(scaleto, counts, bins=[]):
         A list of bin counts
     bins : list[float]
         The bins you want to use; use this option if you are passing a numpy histogram in (i.e. scale(1, *<numpy histogram>)), by default None
+    return_scale_factor : bool
+        Whether the scale factor being used will be returned
+    
     Returns
     -------
     list[float]/Tuple(list[float], list[float])
@@ -27,7 +63,12 @@ def scale(scaleto, counts, bins=[]):
     counts = np.abs(counts)
     
     if any(bins):
+        if return_scale_factor:
+            return signs*counts*scaleto/np.sum(counts), bins, scaleto/np.sum(counts)
         return signs*counts*scaleto/np.sum(counts), bins
+    
+    elif return_scale_factor:
+        return signs*counts*scaleto/np.sum(counts), scaleto/np.sum(counts)
     
     return signs*counts*scaleto/np.sum(counts)
 

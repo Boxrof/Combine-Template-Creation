@@ -91,6 +91,7 @@ class Template_creator(object):
         filename = self.output_directory + self.fname + ".root"
         if not os.path.isfile(filename):
             raise FileNotFoundError("Make sure to dump the Template to a ROOT file first!")
+        
         in_folder = self.output_directory + self.fname
         out_folder = in_folder+"_out"
         
@@ -418,53 +419,77 @@ class Interf_Reso_template_creator_1D(Template_Creator_1D):
         #The 0.5 is for the physics model naming scheme
         
         self.final_scaling_funcs = {#this is how the scaling goes for all 5 parameters
-            "BW1" : (lambda f1, f2, f3, phi12, phi23: f1), 
-            "BW2" : (lambda f1, f2, f3, phi12, phi23: f2), 
-            "BW3" : (lambda f1, f2, f3, phi12, phi23: f3), 
-            "BW1BW2_0_0" : (lambda f1, f2, f3, phi12, phi23 : np.sqrt(f1*f2)*np.cos(phi12*np.pi)), 
-            "BW1BW2_0.5_0" : (lambda f1, f2, f3, phi12, phi23 : np.sqrt(f1*f2)*np.sin(phi12*np.pi)), 
-            "BW1BW3_0_0" : (lambda f1, f2, f3, phi12, phi23 : np.sqrt(f2*f3)*np.cos(phi23*np.pi)), 
-            "BW1BW3_0_0.5" : (lambda f1, f2, f3, phi12, phi23 : np.sqrt(f2*f3)*np.sin(phi23*np.pi)), 
-            "BW2BW3_0_0" : (lambda f1, f2, f3, phi12, phi23 : np.sqrt(f1*f3)*np.cos((phi23 - phi12)*np.pi)), 
-            "BW2BW3_0_0.5" : (lambda f1, f2, f3, phi12, phi23 : np.sqrt(f1*f3)*np.sin((phi23 - phi12)*np.pi))
+            "BW1" : (lambda N, f1, f3, phi12, phi23: N*f1), 
+            "BW2" : (lambda N, f1, f3, phi12, phi23: N*(1 - f1 - f3)), 
+            "BW3" : (lambda N, f1, f3, phi12, phi23: N*f3), 
+            "BW1BW2_0_0" : (lambda N, f1, f3, phi12, phi23 : N*np.sqrt(f1*(1-f1-f3))*np.cos(phi12)), 
+            "BW1BW2_0.5_0" : (lambda N, f1, f3, phi12, phi23 : N*np.sqrt(f1*(1-f1-f3))*np.sin(phi12)), 
+            "BW2BW3_0_0" : (lambda N, f1, f3, phi12, phi23 : N*np.sqrt((1-f1-f3)*f3)*np.cos(phi23)), 
+            "BW2BW3_0_0.5" : (lambda N, f1, f3, phi12, phi23 : N*np.sqrt((1-f1-f3)*f3)*np.sin(phi23)), 
+            "BW1BW3_0_0" : (lambda N, f1, f3, phi12, phi23 : N*np.sqrt(f1*f3)*np.cos((phi23 - phi12))), 
+            "BW1BW3_0_0.5" : (lambda N, f1, f3, phi12, phi23 : N*np.sqrt(f1*f3)*np.sin((phi23 - phi12)))
             }
         
-        scaleDownByConstant = 1
-        #All your cross sections should be approximately the same order of magnitude
-        if CS_BW1 > 1e4: #if it's over a thousand just scale all of them down
-            scaleDownByConstant = 10**(np.floor(np.log10(1e4/CS_BW1)))
+        normalization_factors = np.zeros(3, dtype=float)
+        
         
         self.signals["BW1"] = (np.array(BW1_0_0), CS_BW1)
             
-        BW1_0_0, bins = np.histogram(BW1_0_0, bins=nbins, range=(lowerlim, upperlim))            
-        BW1_0_0 = Template_helper_methods.scale(scaleDownByConstant*CS_BW1, BW1_0_0)
+        BW1_0_0, bins = np.histogram(BW1_0_0, bins=nbins, range=(lowerlim, upperlim))
+        BW1_0_0 = Template_helper_methods.scale(CS_BW1, BW1_0_0)
+        # BW1_0_0, normalization_factors[0] = Template_helper_methods.scale(1, BW1_0_0, return_scale_factor=True)
+        BW1_0_0 /= CS_BW1
+        
         self.scaled_signals["BW1"] = (BW1_0_0, bins)
         
         self.signals["BW2"] = (np.array(BW2_0_0), CS_BW2)
         BW2_0_0, _ = np.histogram(BW2_0_0, bins=bins, range=(lowerlim, upperlim))
-        BW2_0_0 = Template_helper_methods.scale(scaleDownByConstant*CS_BW2, BW2_0_0)
+        BW2_0_0 = Template_helper_methods.scale(CS_BW2, BW2_0_0)
+        # BW2_0_0, normalization_factors[1] = Template_helper_methods.scale(1, BW2_0_0, return_scale_factor=True)
+        BW2_0_0 /= CS_BW2
+        
         self.scaled_signals["BW2"] = (BW2_0_0, bins)
         
         self.signals["BW3"] = (np.array(BW3_0_0), CS_BW3)
         BW3_0_0, _ = np.histogram(BW3_0_0, bins=bins, range=(lowerlim, upperlim))
-        BW3_0_0 = Template_helper_methods.scale(scaleDownByConstant*CS_BW3, BW3_0_0)
+        BW3_0_0 = Template_helper_methods.scale(CS_BW3, BW3_0_0)
+        # BW3_0_0, normalization_factors[2] = Template_helper_methods.scale(1, BW3_0_0, return_scale_factor=True)
+        BW3_0_0 /= CS_BW3
+        
         self.scaled_signals["BW3"] = (BW3_0_0, bins)
         
         interfList = [BW12_0_0, BW12_05_0, BW13_0_0, BW13_0_05, BW23_0_0, BW23_0_05] #list of all the interference terms
         interfCSList = [CS_BW12_0_0, CS_BW12_05_0, CS_BW13_0_0, CS_BW13_0_05, CS_BW23_0_0, CS_BW23_0_05]
+        
+        print(np.sum(BW1_0_0), np.sum(BW2_0_0), np.sum(BW3_0_0), normalization_factors)
         for n, interference_term in enumerate(interfList):
             
             interference_term, _ = np.histogram(interference_term, bins=bins, range=(lowerlim, upperlim))            
             self.signals[self.string_forms[n+3]] = (np.array(interference_term), interfCSList[n])
-            interference_term = Template_helper_methods.scale(scaleDownByConstant*interfCSList[n], interference_term)
+            interference_term = Template_helper_methods.scale(interfCSList[n], interference_term)
             
-            if "12" in self.string_forms[n + 3]:
-                interference_term -= BW1_0_0 + BW2_0_0
-            elif "13" in self.string_forms[n + 3]:
-                interference_term -= BW1_0_0 + BW3_0_0
+            dividing_to_normalize = 1
+            subtraction_terms = np.zeros(len(BW1_0_0))
+            
+            if "BW1BW2" in self.string_forms[n + 3]:
+                dividing_to_normalize = np.sqrt(CS_BW1*CS_BW2)
+                print("12:", dividing_to_normalize)
+                subtraction_terms += BW1_0_0 + BW2_0_0
+            elif "BW1BW3" in self.string_forms[n + 3]:
+                dividing_to_normalize = np.sqrt(CS_BW1*CS_BW3)
+                print("13:", dividing_to_normalize)
+                subtraction_terms += BW1_0_0 + BW3_0_0
+            elif "BW2BW3" in self.string_forms[n+3]:
+                dividing_to_normalize = np.sqrt(CS_BW2*CS_BW3)
+                print("23:", dividing_to_normalize)
+                subtraction_terms += BW2_0_0 + BW3_0_0
             else:
-                interference_term -= BW2_0_0 + BW3_0_0
+                print("ERROR")
+                exit()
             
+            print("interference area of", "{:.2e}".format(np.sum(interference_term)), "for", self.string_forms[n + 3])
+            interference_term = (interference_term/dividing_to_normalize) - subtraction_terms
+            print("Final area of interference: ", np.sum(interference_term), '\n')
             self.scaled_signals[self.string_forms[n+3]] = (interference_term, bins)
             
         self.bins = bins
@@ -477,7 +502,7 @@ class Interf_Reso_template_creator_1D(Template_Creator_1D):
             for signal in self.scaled_signals.keys():
                 
                 if signal == "BW1" or signal == "BW2" or signal == "BW3":
-                    f["ggH_0PM_"+signal] = self.scaled_signals["BW1"]
+                    f["ggH_0PM_"+signal] = self.scaled_signals[signal]
                         
                 # # BW2_0_0 = Template_helper_methods.scale(BW2_0_0, area2)
                 # f["ggH_0PM_BW2"] = self.scaled_signals["BW2"]
@@ -496,9 +521,9 @@ class Interf_Reso_template_creator_1D(Template_Creator_1D):
                     if np.any(neg):
                         f["ggH_0PM_" + signal + "_negative"] = (neg, bins)
 
-            f["bkg_ggzz"] = self.scale_and_add_bkgs(bins, scaleTo=False)
-            
-    def histo_based_on_params(self, f1, f2, f3, phi12, phi23):
+            f["bkg_ggzz"] = self.scale_and_add_bkgs(bins, scaleTo=True)
+    
+    def histo_based_on_params(self, N, f1, f3, phi12, phi23):
         """Returns a histogram based on the 5 parameters that are fitted in the template
         While not necessarily part of creating the template, this is a useful place to put this function
 
@@ -522,26 +547,29 @@ class Interf_Reso_template_creator_1D(Template_Creator_1D):
         """
         param_dict = locals()
         
-        params = [f1, f2, f3, phi12, phi23]
+        params = [N, f1, f3, phi12, phi23]
         total = np.zeros(len(self.bins) - 1, dtype=float)
         params = list(map(float, params))
         plt.figure()
         for signal in self.scaled_signals.keys():
-            scalefactor = self.final_scaling_funcs[signal](*params)
-            temp_counts, _ = Template_helper_methods.scale(scalefactor, *self.scaled_signals[signal])
+            temp_counts = self.final_scaling_funcs[signal](*params)*self.scaled_signals[signal][0]
+            # temp_counts, _ = Template_helper_methods.scale(scalefactor, *self.scaled_signals[signal])
             hep.histplot(temp_counts, self.bins, label=signal, lw=3)
             total += temp_counts
+            
+        if np.any(total < 0):
+            warnings.warn("Bins Cannot be Negative! Fix your Methodology!", RuntimeWarning)
         
-        hep.histplot(total, self.bins, lw=4, label="all", color="black")
+        hep.histplot(total, self.bins, lw=4, label="all:" + "{:.1f}".format(np.sum(total)), color="black")
         plt.gca().axhline(lw=2, color='black')
         plt.legend()
         titlestr = ""
         for name, i in param_dict.items():
             try:
                 if "phi" in name:
-                    titlestr += name + ": {:.2f}".format(float(i)) + r"$\pi$ "
+                    titlestr += name + ": {:.2f} ".format(float(i))# + r"$\pi$ "
                 else:
-                    titlestr += name + ": {:.2f}".format(float(i)) + " "
+                    titlestr += name + ": {:.2f} ".format(float(i))
             except:
                 pass
         plt.title(titlestr)

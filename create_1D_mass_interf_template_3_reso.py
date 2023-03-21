@@ -5,6 +5,7 @@ import argparse
 import numpy as np
 import mplhep as hep
 import Template_creator
+import Template_helper_methods
 import matplotlib.pyplot as plt
 
 def place_that_list(filename):
@@ -61,7 +62,8 @@ if __name__ == "__main__":
                         help="The areas for each background")
     parser.add_argument('-a', '--areas', nargs=3, type=float,
                         help="The areas for the three signals")
-    parser.add_argument('-os', '--outScaled', nargs=5, default=[])
+    parser.add_argument('-os', '--outScaled', nargs=5, default=[], type=Template_helper_methods.CombineParam,
+                        help="If this parameter is enabled ignore everything and plot the histogram based on the parameters given")
     args = parser.parse_args()
     
     """
@@ -104,12 +106,18 @@ if __name__ == "__main__":
     
     
     Three_BW_Creation = Template_creator.Interf_Reso_template_creator_1D(args.outFolder, "Mass_Template",
-                                                     bkg_samples.values(), bkg_samples.keys(), args.bkgAreas, 6, 9,
-                                                     *list(map(data_samples.get,insertionList)),
-                                                     *list(map(cross_section_samples.get, insertionList)),
-                                                     args.nbins, *args.areas)
+        bkg_samples.values(), bkg_samples.keys(), args.bkgAreas, 6, 9,
+        *list(map(data_samples.get,insertionList)),
+        *list(map(cross_section_samples.get, insertionList)),
+        args.nbins, *args.areas)
+    
     if args.outScaled:
-        Three_BW_Creation.histo_based_on_params(*args.outScaled)
+        params = {}
+        for param in args.outScaled:
+            param = param.split('=')
+            params[param[0].lower()] = param[1]
+        
+        Three_BW_Creation.histo_based_on_params(params['n'], params['rbw1'], params['rbw3'], params['rphi12'], params['rphi23'])
     else:
         Three_BW_Creation.dump()
         Three_BW_Creation.create_datacards()

@@ -12,3 +12,4 @@ Combine-Template-Creation
    Template_helper_methods
    create_1D_mass_interf_template_3_reso
    plot_fit
+   plot_tetra_distr_with_params
