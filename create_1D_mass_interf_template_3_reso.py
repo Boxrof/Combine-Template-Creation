@@ -62,8 +62,11 @@ if __name__ == "__main__":
                         help="The areas for each background")
     parser.add_argument('-a', '--areas', nargs=3, type=float,
                         help="The areas for the three signals")
-    parser.add_argument('-os', '--outScaled', nargs=5, default=[], type=Template_helper_methods.CombineParam,
+    scale_or_test = parser.add_mutually_exclusive_group()
+    scale_or_test.add_argument('-os', '--outScaled', nargs=5, default=[], type=Template_helper_methods.CombineParam,
                         help="If this parameter is enabled ignore everything and plot the histogram based on the parameters given")
+    scale_or_test.add_argument('-t', '--test', action="store_true",
+                               help="Enable this option if you want to test your formulas")
     args = parser.parse_args()
     
     """
@@ -118,6 +121,9 @@ if __name__ == "__main__":
             params[param[0].lower()] = param[1]
         
         Three_BW_Creation.histo_based_on_params(params['n'], params['rbw1'], params['rbw3'], params['rphi12'], params['rphi23'])
+    elif args.test:
+        print("testing...")
+        Three_BW_Creation.check_for_correct_formulation()
     else:
         Three_BW_Creation.dump()
         Three_BW_Creation.create_datacards()

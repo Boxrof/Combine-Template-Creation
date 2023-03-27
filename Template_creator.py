@@ -426,7 +426,7 @@ class Interf_Reso_template_creator_1D(Template_Creator_1D):
             "BW1BW2_0.5_0" : (lambda N, f1, f3, phi12, phi23 : N*np.sqrt(f1*(1-f1-f3))*np.sin(phi12)), 
             "BW2BW3_0_0" : (lambda N, f1, f3, phi12, phi23 : N*np.sqrt((1-f1-f3)*f3)*np.cos(phi23)), 
             "BW2BW3_0_0.5" : (lambda N, f1, f3, phi12, phi23 : N*np.sqrt((1-f1-f3)*f3)*np.sin(phi23)), 
-            "BW1BW3_0_0" : (lambda N, f1, f3, phi12, phi23 : N*np.sqrt(f1*f3)*np.cos((phi23 - phi12))), 
+            "BW1BW3_0_0" : (lambda N, f1, f3, phi12, phi23 : N*np.sqrt(f1*f3)*np.cos((phi12 - phi23))), 
             "BW1BW3_0_0.5" : (lambda N, f1, f3, phi12, phi23 : N*np.sqrt(f1*f3)*np.sin((phi23 - phi12)))
             }
         
@@ -438,25 +438,25 @@ class Interf_Reso_template_creator_1D(Template_Creator_1D):
         BW1_0_0, bins = np.histogram(BW1_0_0, bins=nbins, range=(lowerlim, upperlim))
         BW1_0_0 = Template_helper_methods.scale(CS_BW1, BW1_0_0)
         # BW1_0_0, normalization_factors[0] = Template_helper_methods.scale(1, BW1_0_0, return_scale_factor=True)
-        BW1_0_0 /= CS_BW1
+        # BW1_0_0 /= CS_BW1
         
-        self.scaled_signals["BW1"] = (BW1_0_0, bins)
+        self.scaled_signals["BW1"] = (BW1_0_0/CS_BW1, bins)
         
         self.signals["BW2"] = (np.array(BW2_0_0), CS_BW2)
         BW2_0_0, _ = np.histogram(BW2_0_0, bins=bins, range=(lowerlim, upperlim))
         BW2_0_0 = Template_helper_methods.scale(CS_BW2, BW2_0_0)
         # BW2_0_0, normalization_factors[1] = Template_helper_methods.scale(1, BW2_0_0, return_scale_factor=True)
-        BW2_0_0 /= CS_BW2
+        # BW2_0_0 /= CS_BW2
         
-        self.scaled_signals["BW2"] = (BW2_0_0, bins)
+        self.scaled_signals["BW2"] = (BW2_0_0/CS_BW2, bins)
         
         self.signals["BW3"] = (np.array(BW3_0_0), CS_BW3)
         BW3_0_0, _ = np.histogram(BW3_0_0, bins=bins, range=(lowerlim, upperlim))
         BW3_0_0 = Template_helper_methods.scale(CS_BW3, BW3_0_0)
         # BW3_0_0, normalization_factors[2] = Template_helper_methods.scale(1, BW3_0_0, return_scale_factor=True)
-        BW3_0_0 /= CS_BW3
+        # BW3_0_0 /= CS_BW3
         
-        self.scaled_signals["BW3"] = (BW3_0_0, bins)
+        self.scaled_signals["BW3"] = (BW3_0_0/CS_BW3, bins)
         
         interfList = [BW12_0_0, BW12_05_0, BW13_0_0, BW13_0_05, BW23_0_0, BW23_0_05] #list of all the interference terms
         interfCSList = [CS_BW12_0_0, CS_BW12_05_0, CS_BW13_0_0, CS_BW13_0_05, CS_BW23_0_0, CS_BW23_0_05]
@@ -488,8 +488,10 @@ class Interf_Reso_template_creator_1D(Template_Creator_1D):
                 exit()
             
             print("interference area of", "{:.2e}".format(np.sum(interference_term)), "for", self.string_forms[n + 3])
-            interference_term = (interference_term/dividing_to_normalize) - subtraction_terms
-            print("Final area of interference: ", np.sum(interference_term), '\n')
+            interference_term -= subtraction_terms
+            print("Interference area subtracted down to", "{:.2e}".format(np.sum(interference_term)))
+            interference_term = interference_term/dividing_to_normalize
+            print("Final area of interference: ", np.sum(interference_term), np.sum(np.abs(interference_term)), '\n')
             self.scaled_signals[self.string_forms[n+3]] = (interference_term, bins)
             
         self.bins = bins
@@ -523,7 +525,7 @@ class Interf_Reso_template_creator_1D(Template_Creator_1D):
 
             f["bkg_ggzz"] = self.scale_and_add_bkgs(bins, scaleTo=True)
     
-    def histo_based_on_params(self, N, f1, f3, phi12, phi23):
+    def histo_based_on_params(self, N, f1, f3, phi12, phi23, fname="scaled_hist"):
         """Returns a histogram based on the 5 parameters that are fitted in the template
         While not necessarily part of creating the template, this is a useful place to put this function
 
@@ -539,13 +541,15 @@ class Interf_Reso_template_creator_1D(Template_Creator_1D):
             The phase between BW1 and BW2
         phi23 : float
             The phase between BW2 and BW3
+        fname : str
+            The filename you want, by default "scaled_hist"
 
         Returns
         -------
         Tuple[list[float], list[float]]
             A numpy histogram of everything
         """
-        param_dict = locals()
+        param_dict = locals() #this stores the parameter names
         
         params = [N, f1, f3, phi12, phi23]
         total = np.zeros(len(self.bins) - 1, dtype=float)
@@ -574,8 +578,40 @@ class Interf_Reso_template_creator_1D(Template_Creator_1D):
                 pass
         plt.title(titlestr)
         plt.xlabel(r"$m_{4\mu}[GeV]$")
-        plt.savefig("scaled_hist.png")
+        plt.savefig(fname+".png")
         return total, self.bins
+    
+    def check_for_correct_formulation(self, iters=10):
+        """Checks Whether your formulation EVER returns a negative bin!
+
+        Parameters
+        ----------
+        iters : int, optional
+            The number of times you sample the range of events, by default 10
+        Returns
+        -------
+        bool
+            Whether your functions work!
+        """
+        os.system("rm failure*.png")
+        
+        allWorked = True
+        failCount = 1
+        
+        for f1 in tqdm.tqdm(np.linspace(1, 0, iters, endpoint=False), desc="f1"):
+            for f3 in tqdm.tqdm(np.linspace(1 - f1, 0, iters, endpoint=False), desc="f3", leave=False):
+                for phi12 in tqdm.tqdm(np.linspace(-np.pi, np.pi, iters), desc="phi1", leave=False):
+                    for phi23 in tqdm.tqdm(np.linspace(-np.pi, np.pi, iters), desc="phi1", leave=False):
+                        total = np.zeros(len(self.bins) - 1, dtype=float)
+                        params = [2000, f1, f3, phi12, phi23]
+                        for signal in self.scaled_signals.keys():
+                            total += self.final_scaling_funcs[signal](*params)*self.scaled_signals[signal][0]
+                        if np.any(total < -1):
+                            print("failed at f1=",f1,"f3=",f3,"phi1=",phi12,"phi3=",phi23)
+                            self.histo_based_on_params(*params, fname="failure" + str(failCount))
+                            failCount += 1
+                            allWorked = False
+        return allWorked
         
     def plot_overall_interference(self):
         """This plots all the different combinations of the three phases
