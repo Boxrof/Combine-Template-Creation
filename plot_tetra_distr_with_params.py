@@ -16,6 +16,7 @@ mpl.rcParams['lines.linewidth'] = 2
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument('commandFile', type=str)
     parser.add_argument('-s', '--suffix', default="")
     already_known = parser.add_argument_group("already known group", 
                                               "If you already know the parameters just use -p").add_mutually_exclusive_group(required=True)
@@ -55,19 +56,20 @@ if __name__ == "__main__":
             file_data = [file['limit'].arrays(list(positions.keys()) + ['deltaNLL'], library='pd') for file in files]
             
             for nf, file in enumerate(file_data):
-                temp = file.query('deltaNLL==0')[list(positions.keys())]
+                temp = file.loc[file['deltaNLL'].idxmin()][list(positions.keys())]
+                # print(file.loc[file['deltaNLL'].idxmin()])
                 runstr = ""
-                for ne, element in enumerate(temp.columns):
+                for ne, element in enumerate(positions.keys()):
                     zero_positions[nf][positions[element]] = temp[element]
                     runstr += element + '=' + str(zero_positions[nf][positions[element]]) + " "
                     print(runstr)
-                subprocess.run("python3 $(cat command.txt) -os " + runstr, shell=True)
+                subprocess.run("python3 $(cat " + args.commandFile + ") -os " + runstr, shell=True)
                 subprocess.run("mv scaled_hist.png local_files/scaled_hist_"+args.files[nf].split('/')[-1].split('.')[0]+args.suffix+'.png', shell=True)
     else:
         runstr = ""
         for param in args.params:
             runstr += param + " "
         print(runstr)
-        subprocess.run("python3 $(cat command.txt) -os " + runstr, shell=True)
+        subprocess.run("python3 $(cat " + args.commandFile + ") -os " + runstr, shell=True)
         params_in_name = sorted(args.params)
         subprocess.run("mv scaled_hist.png local_files/scaled_hist_" + "_".join(params_in_name) + args.suffix + '.png', shell=True)

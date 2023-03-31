@@ -43,7 +43,9 @@
               <!-- Local TOC -->
               <div class="local-toc"><ul>
 <li><a class="reference internal" href="#">Template_helper_methods module</a><ul>
+<li><a class="reference internal" href="#Template_helper_methods.CombineParam"><code class="docutils literal notranslate"><span class="pre">CombineParam()</span></code></a></li>
 <li><a class="reference internal" href="#Template_helper_methods.Unroll_2D_OnShell"><code class="docutils literal notranslate"><span class="pre">Unroll_2D_OnShell()</span></code></a></li>
+<li><a class="reference internal" href="#Template_helper_methods.killPoints"><code class="docutils literal notranslate"><span class="pre">killPoints()</span></code></a></li>
 <li><a class="reference internal" href="#Template_helper_methods.scale"><code class="docutils literal notranslate"><span class="pre">scale()</span></code></a></li>
 </ul>
 </li>
@@ -81,6 +83,32 @@
   <section id="module-Template_helper_methods">
 <span id="template-helper-methods-module"></span><h1>Template_helper_methods module<a class="headerlink" href="#module-Template_helper_methods" title="Permalink to this heading"></a></h1>
 <dl class="py function">
+<dt class="sig sig-object py" id="Template_helper_methods.CombineParam">
+<span class="sig-prename descclassname"><span class="pre">Template_helper_methods.</span></span><span class="sig-name descname"><span class="pre">CombineParam</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Template_helper_methods.html#CombineParam"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Template_helper_methods.CombineParam" title="Permalink to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Checks whether the argument you are passing is of form &lt;Param Name&gt;=&lt;Param Numerical Value&gt;</dt><dd><p>Used as a type for argparse arguments i.e. parser.add_argument(–f, type=CombineParam)</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>s</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The argument being passed</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If the argument looks fine return the string as is</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)">str</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>argparse.ArgumentTypeError</strong> – Only one term should be on either side of the equals sign</p></li>
+<li><p><strong>argparse.ArgumentTypeError</strong> – Param value should be castable to a float</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="Template_helper_methods.Unroll_2D_OnShell">
 <span class="sig-prename descclassname"><span class="pre">Template_helper_methods.</span></span><span class="sig-name descname"><span class="pre">Unroll_2D_OnShell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fname</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Template_helper_methods.html#Unroll_2D_OnShell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Template_helper_methods.Unroll_2D_OnShell" title="Permalink to this definition"></a></dt>
 <dd><p>Code written by Jeffrey Davis of happy hour cocktail fame to unroll a 2 dimensional histogram</p>
@@ -90,6 +118,31 @@
 <li><p><strong>directory</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The directory that you are inputting and outputting from</p></li>
 <li><p><strong>fname</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a>) – The filename of what you are unrolling</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="Template_helper_methods.killPoints">
+<span class="sig-prename descclassname"><span class="pre">Template_helper_methods.</span></span><span class="sig-name descname"><span class="pre">killPoints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Template_helper_methods.html#killPoints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#Template_helper_methods.killPoints" title="Permalink to this definition"></a></dt>
+<dd><p>This function kills all “spikes” in a plot, assuming them to be unnatural</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em><em>]</em>) – List of x values</p></li>
+<li><p><strong>y</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.11)"><em>list</em></a><em>[</em><em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>]</em><em>]</em>) – List of y values</p></li>
+<li><p><strong>tolerance</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a><em>, </em><em>optional</em>) – A tolerance for what is defined as a “spike”.
+This tolerance should be between 0 and 1, but there is no general restriction, by default 0.0</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>_description_</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>_type_</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.11)"><strong>ValueError</strong></a> – _description_</p>
 </dd>
 </dl>
 </dd></dl>

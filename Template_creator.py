@@ -566,7 +566,7 @@ class Interf_Reso_template_creator_1D(Template_Creator_1D):
         
         hep.histplot(total, self.bins, lw=4, label="all:" + "{:.1f}".format(np.sum(total)), color="black")
         plt.gca().axhline(lw=2, color='black')
-        plt.legend()
+        plt.legend(fontsize=12, loc='lower right')
         titlestr = ""
         for name, i in param_dict.items():
             try:
@@ -578,6 +578,7 @@ class Interf_Reso_template_creator_1D(Template_Creator_1D):
                 pass
         plt.title(titlestr)
         plt.xlabel(r"$m_{4\mu}[GeV]$")
+        plt.xlim(self.lowerlim, self.upperlim)
         plt.savefig(fname+".png")
         return total, self.bins
     
@@ -617,18 +618,18 @@ class Interf_Reso_template_creator_1D(Template_Creator_1D):
         """This plots all the different combinations of the three phases
         """
         # print(self.scaled_signals)
-        pures = ([key for key in self.scaled_signals.keys() if ("1BW" not in key and "1BW" not in key and "2BW" not in key)], 
-                 [value for key, value in self.scaled_signals.items() if ("1BW" not in key and "1BW" not in key and "2BW" not in key)])
-        for interf12 in tqdm.tqdm(["BW1BW2_0_0", "BW1BW2_0.5_0"], desc="Top Level of interference loop"):
-            for interf13 in tqdm.tqdm(["BW1BW3_0_0", "BW1BW3_0_0.5"], leave=False, desc="Second Level of interference loop"):
-                for interf23 in tqdm.tqdm(["BW2BW3_0_0", "BW2BW3_0_0.5"], leave=False, desc="Bottom Level of interference loop"):
-                    names, terms = copy.deepcopy(pures)
-                    names += [interf12, interf13, interf23]
-                    # print(names)
-                    terms += [self.scaled_signals[interf12], self.scaled_signals[interf13], self.scaled_signals[interf23]]
+        # pures = ([key for key in self.scaled_signals.keys() if ("1BW" not in key and "1BW" not in key and "2BW" not in key)], 
+        #          [value for key, value in self.scaled_signals.items() if ("1BW" not in key and "1BW" not in key and "2BW" not in key)])
+        # for interf12 in tqdm.tqdm(["BW1BW2_0_0", "BW1BW2_0.5_0"], desc="Top Level of interference loop"):
+        #     for interf13 in tqdm.tqdm(["BW1BW3_0_0", "BW1BW3_0_0.5"], leave=False, desc="Second Level of interference loop"):
+        #         for interf23 in tqdm.tqdm(["BW2BW3_0_0", "BW2BW3_0_0.5"], leave=False, desc="Bottom Level of interference loop"):
+        #             names, terms = copy.deepcopy(pures)
+        #             names += [interf12, interf13, interf23]
+        #             # print(names)
+        #             terms += [self.scaled_signals[interf12], self.scaled_signals[interf13], self.scaled_signals[interf23]]
 
-                    mihm.plot_overall_interference(terms, names, 
-                                                   self.output_directory, interf12+"_"+interf13+"_"+interf23+"_"+self.fname)
+        mihm.plot_overall_interference(list(self.scaled_signals.values()), list(self.scaled_signals.keys()), 
+                                        self.output_directory, self.fname+"interference")
 
 class Significance_Hypothesis_template_creator_1D(Template_Creator_1D):
     def __init__(self, output_directory, fname, bkgs, bkgNames, bkg_areas, lowerlim, upperlim,

@@ -208,3 +208,65 @@ def Unroll_2D_OnShell(directory, fname):
             temp_neg.Write()
             
         print('Dumped Histogram into '+directory + fname+'_unrolled.root')
+        
+
+def killPoints(x, y, tolerance=0.0):
+    """This function kills all "spikes" in a plot, assuming them to be unnatural
+
+    Parameters
+    ----------
+    x : list[Union[int, float]]
+        List of x values
+    y : list[Union[int, float]]
+        List of y values
+    tolerance : float, optional
+        A tolerance for what is defined as a "spike".
+        This tolerance should be between 0 and 1, but there is no general restriction, by default 0.0
+
+    Returns
+    -------
+    _type_
+        _description_
+
+    Raises
+    ------
+    ValueError
+        _description_
+    """
+    if len(x) != len(y):
+        raise ValueError("Arrays must be of equal size!")
+    # for i, (px, py) in enumerate(zip(x,y)):
+    #     if i == 0 or i == len(y):
+    #         continue
+    #     if py > y[i-1] and py > y[i+1]:
+    #         recorded_indices.append(i)
+    #         print("value of",px,py,"will be killed!")
+            
+    # x = np.array(x)
+    # y = np.array(y)
+    # print(recorded_indices)
+    # return np.delete(x, recorded_indices), np.delete(y, recorded_indices)
+    
+    still_need_to_kill = True
+    x = np.array(x)
+    y = np.array(y)
+    
+    if tolerance < 1:
+        tolerance += 1 #to make multiplication easier
+    
+    i = 1
+    while still_need_to_kill: #While there are still instances of spikes, keep going
+        if i == len(y) - 1:
+            still_need_to_kill = False #if the loop has reached the end of the loop there is no longer any need for it
+        
+        elif (y[i] > y[i-1] and y[i] > y[i+1] 
+              and np.abs(y[i]) > np.abs(y[i-1])*tolerance and np.abs(y[i]) > np.abs(y[i+1])*tolerance):
+            
+            x, y = np.delete(x, i), np.delete(y, i) #delete the x and y values
+            print("killed point", y[i])
+            i = 1 #reset the indexing to 1 (since there cannot be a "spike" at the first position) and restart the search
+        
+        else:
+            i += 1 #move the index up
+    
+    return x, y

@@ -54,6 +54,8 @@ if __name__ == "__main__":
                         help="The number of bins you want")
     parser.add_argument('-o', '--outFolder', default='./',
                         help="The directory you'd like to output to")
+    parser.add_argument('-na', '--name', default="Mass_Template", type=str,
+                        help="What you'd like to name your folder")
     parser.add_argument('-c', '--crossSection', required=True,
                         help="The cross section file with all your sample names inside")
     parser.add_argument('-b', '--backgrounds', nargs='+', required=True,
@@ -108,7 +110,7 @@ if __name__ == "__main__":
     
     
     
-    Three_BW_Creation = Template_creator.Interf_Reso_template_creator_1D(args.outFolder, "Mass_Template",
+    Three_BW_Creation = Template_creator.Interf_Reso_template_creator_1D(args.outFolder, args.name,
         bkg_samples.values(), bkg_samples.keys(), args.bkgAreas, 6, 9,
         *list(map(data_samples.get,insertionList)),
         *list(map(cross_section_samples.get, insertionList)),

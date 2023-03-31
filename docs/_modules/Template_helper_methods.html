@@ -76,6 +76,39 @@
 <span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">import</span> <span class="nn">uproot</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+
+<div class="viewcode-block" id="CombineParam"><a class="viewcode-back" href="../Template_helper_methods.html#Template_helper_methods.CombineParam">[docs]</a><span class="k">def</span> <span class="nf">CombineParam</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Checks whether the argument you are passing is of form &lt;Param Name&gt;=&lt;Param Numerical Value&gt;</span>
+<span class="sd">        Used as a type for argparse arguments i.e. parser.add_argument(--f, type=CombineParam)</span>
+<span class="sd">        </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    s : str</span>
+<span class="sd">        The argument being passed</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        If the argument looks fine return the string as is</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    argparse.ArgumentTypeError</span>
+<span class="sd">        Only one term should be on either side of the equals sign</span>
+<span class="sd">    argparse.ArgumentTypeError</span>
+<span class="sd">        Param value should be castable to a float</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">check</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">check</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span><span class="s2">&quot;Format should be &lt;Param Name&gt;=&lt;Param Numerical Value&gt;&quot;</span><span class="p">)</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">float</span><span class="p">(</span><span class="n">check</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentTypeError</span><span class="p">(</span><span class="s2">&quot;Format should be &lt;Param Name&gt;=&lt;Param Numerical Value&gt;&quot;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">s</span></div>
 
 
 <div class="viewcode-block" id="scale"><a class="viewcode-back" href="../Template_helper_methods.html#Template_helper_methods.scale">[docs]</a><span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="n">scaleto</span><span class="p">,</span> <span class="n">counts</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="p">[],</span> <span class="n">return_scale_factor</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -91,6 +124,7 @@
 <span class="sd">        The bins you want to use; use this option if you are passing a numpy histogram in (i.e. scale(1, *&lt;numpy histogram&gt;)), by default None</span>
 <span class="sd">    return_scale_factor : bool</span>
 <span class="sd">        Whether the scale factor being used will be returned</span>
+<span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    list[float]/Tuple(list[float], list[float])</span>
@@ -247,6 +281,68 @@
             <span class="n">temp_neg</span><span class="o">.</span><span class="n">Write</span><span class="p">()</span>
             
         <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Dumped Histogram into &#39;</span><span class="o">+</span><span class="n">directory</span> <span class="o">+</span> <span class="n">fname</span><span class="o">+</span><span class="s1">&#39;_unrolled.root&#39;</span><span class="p">)</span></div>
+        
+
+<div class="viewcode-block" id="killPoints"><a class="viewcode-back" href="../Template_helper_methods.html#Template_helper_methods.killPoints">[docs]</a><span class="k">def</span> <span class="nf">killPoints</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This function kills all &quot;spikes&quot; in a plot, assuming them to be unnatural</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : list[Union[int, float]]</span>
+<span class="sd">        List of x values</span>
+<span class="sd">    y : list[Union[int, float]]</span>
+<span class="sd">        List of y values</span>
+<span class="sd">    tolerance : float, optional</span>
+<span class="sd">        A tolerance for what is defined as a &quot;spike&quot;.</span>
+<span class="sd">        This tolerance should be between 0 and 1, but there is no general restriction, by default 0.0</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    _type_</span>
+<span class="sd">        _description_</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        _description_</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Arrays must be of equal size!&quot;</span><span class="p">)</span>
+    <span class="c1"># for i, (px, py) in enumerate(zip(x,y)):</span>
+    <span class="c1">#     if i == 0 or i == len(y):</span>
+    <span class="c1">#         continue</span>
+    <span class="c1">#     if py &gt; y[i-1] and py &gt; y[i+1]:</span>
+    <span class="c1">#         recorded_indices.append(i)</span>
+    <span class="c1">#         print(&quot;value of&quot;,px,py,&quot;will be killed!&quot;)</span>
+            
+    <span class="c1"># x = np.array(x)</span>
+    <span class="c1"># y = np.array(y)</span>
+    <span class="c1"># print(recorded_indices)</span>
+    <span class="c1"># return np.delete(x, recorded_indices), np.delete(y, recorded_indices)</span>
+    
+    <span class="n">still_need_to_kill</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">tolerance</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">tolerance</span> <span class="o">+=</span> <span class="mi">1</span> <span class="c1">#to make multiplication easier</span>
+    
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">while</span> <span class="n">still_need_to_kill</span><span class="p">:</span> <span class="c1">#While there are still instances of spikes, keep going</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">still_need_to_kill</span> <span class="o">=</span> <span class="kc">False</span> <span class="c1">#if the loop has reached the end of the loop there is no longer any need for it</span>
+        
+        <span class="k">elif</span> <span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> 
+              <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="n">tolerance</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="n">tolerance</span><span class="p">):</span>
+            
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="c1">#delete the x and y values</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;killed point&quot;</span><span class="p">,</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span> <span class="c1">#reset the indexing to 1 (since there cannot be a &quot;spike&quot; at the first position) and restart the search</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span> <span class="c1">#move the index up</span>
+    
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span></div>
 </pre></div>
 
            </div>

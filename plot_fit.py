@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import argparse
 import contextlib
-import subprocess
+import Template_helper_methods as thm
 
 plt.style.use(hep.style.ROOT)
 import matplotlib as mpl
@@ -20,6 +20,8 @@ if __name__ == "__main__":
                         help="The branches you want to plot")
     parser.add_argument('--log', action="store_true")
     parser.add_argument('-pre', '--prefix', default="")
+    parser.add_argument('-nk', '--nokill', action="store_true")
+    parser.add_argument('-max', '--maximum', type=float)
     args = parser.parse_args()
     
     zero_positions = np.zeros((len(args.files), len(args.branches))
@@ -36,10 +38,14 @@ if __name__ == "__main__":
             plt.cla()
             for nf, (data, name) in enumerate(zip(file_data, args.files)):
                 data.sort_values(element, inplace=True, ignore_index=True)
-                zero_positions[nf][ne] = data.query('deltaNLL==0')[element]
+                zero_positions[nf][ne] = data.loc[data['deltaNLL'].idxmin()][element]
                 
-                labelstr = "{:.3e}".format(zero_positions[nf][ne]) + '\n' + name.split('.')[0].split('_')[-1]
-                plt.plot(data[element], 2*data['deltaNLL'], lw=2, label=labelstr)
+                x = data[element]
+                y=2*data['deltaNLL']
+                if not args.nokill:
+                    x, y = thm.killPoints(x,y)
+                labelstr = "{:.3e}".format(zero_positions[nf][ne]) + '\n' + name.split('/')[-1].split('.')[0].split('_')[1].replace('tetra', '')
+                plt.plot(x, y, lw=2, label=labelstr, linestyle='dashed')
                 
             plt.gca().axhline(color='black', lw=2)
             plt.gca().axvline(color='black', lw=2)
@@ -47,6 +53,8 @@ if __name__ == "__main__":
             plt.ylabel(r'$2\times\Delta NLL$')
             plt.xlabel(element)
             plt.legend(loc='upper right')
+            if args.maximum:
+                plt.ylim(top=args.maximum)
             if args.log:
                 plt.yscale('symlog')
                 plt.ylim(bottom=0)
