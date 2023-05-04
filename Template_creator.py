@@ -1,7 +1,7 @@
 import Mass_interference_helper_methods as mihm
+import Template_helper_methods as thm
 from collections.abc import Iterable
 import matplotlib.pyplot as plt
-import Template_helper_methods
 import mplhep as hep
 import pandas as pd
 import numpy as np
@@ -137,27 +137,39 @@ class Template_creator(object):
             The number of plots you want, by default 40
         """
         bins = []
-        weights = []
+        bkg_distrs = []
         labels = []
         for bkg_name, (bkg, area) in self.bkgs.items():
-            if any(bins):
+            if any(bins): #In the first run through there will not be any defined bins - but after that make sure to use the same bins using this.
                 bkg, _ = np.histogram(bkg, bins=bins, range=(self.lowerlim, self.upperlim))
-            else:
+            else: #generate a certain number of bins the first time through
                 bkg, bins = np.histogram(bkg, bins=nbins, range=(self.lowerlim, self.upperlim))
-            bkg = Template_helper_methods.scale(area, bkg)
+            bkg = thm.scale(area, bkg)
             labels.append(bkg_name)
-            weights.append(bkg)
+            bkg_distrs.append(bkg)
         
+        plt.cla()
+        hep.histplot(bkg_distrs, label=labels, lw=3)
+        plt.legend()
+        plt.savefig(self.output_directory + 'bkgs.png')
+        
+        total_sig = np.zeros(nbins)
         for sig_name, (sig, area) in self.signals.items():
             sig, _ = np.histogram(sig, bins=bins, range=(self.lowerlim, self.upperlim))
-            sig = Template_helper_methods.scale(area, bkg)
+            sig = thm.scale(area, sig)
+            total_sig += sig
             plt.cla()
-            hep.histplot(weights + [sig], bins=bins, label=labels + [sig_name], stack=True, lw=3)
+            hep.histplot(bkg_distrs + [sig], bins=bins, label=labels + [sig_name], stack=True, lw=3)
             plt.legend()
             plt.savefig(self.output_directory + sig_name + '_stack.png')
         
+        plt.cla()
+        hep.histplot(bkg_distrs + [total_sig], bins=bins, label=labels + ["signal"], stack=True, lw=3)
+        plt.legend()
+        plt.savefig(self.output_directory + 'bigStack.png')
+        
 class Template_Creator_1D(Template_creator):
-    def __init__(self, output_directory, fname, bkgs, bkgNames, bkg_areas, lowerlim, upperlim):
+    def __init__(self, output_directory, fname, bkgs, bkgNames, bkg_areas, lowerlim, upperlim, nbins):
         """This initialization takes in all the same inputs as the parent class.
 
         Parameters
@@ -176,11 +188,15 @@ class Template_Creator_1D(Template_creator):
             The lower limit of your attribute's range (i.e. if it was phi, lowerlim would be -pi)
         upperlim : float
             The upper limit of your attribute's range (i.e. if it was phi, upperlim would be pi)
+        nbins : int
+            The number of bins you want
         """
         super().__init__(output_directory, fname, bkgs, bkgNames, bkg_areas, lowerlim, upperlim)
         self.dimension = 1 #resets the dimension to 1
         
-    def scale_and_add_bkgs(self, bins=40, scaleTo=True):
+        _, self.bins = np.histogram([], bins=nbins, range=(lowerlim, upperlim))
+        
+    def scale_and_add_bkgs(self, scaleTo=True):
         """This is the 1-dimensional version of the function. 
         It serves to bin and scale the backgrounds given to their respective areas, then add them into one histogram.
 
@@ -197,22 +213,24 @@ class Template_Creator_1D(Template_creator):
             an overall histogram pair of (counts, bins) a la a numpy histogram
         """
         names_samples_and_areas = list(self.bkgs.items())
-            
+                
         name, (sample, area) = names_samples_and_areas[0]
-        bkg_sample, bins = np.histogram(sample, range=(self.lowerlim, self.upperlim), bins=bins)
+        bkg_sample, _ = np.histogram(sample, range=(self.lowerlim, self.upperlim), bins=self.bins)
         if scaleTo:
-            bkg_sample = Template_helper_methods.scale(area, bkg_sample)
-            self.scaled_bkgs[name] = (bkg_sample, bins)
-        overall = bkg_sample
+            bkg_sample = thm.scale(area, bkg_sample)
+            if name not in self.scaled_bkgs.keys():
+                self.scaled_bkgs[name] = (bkg_sample, self.bins)
+        overall = bkg_sample.copy()
         
         for name, (sample, area) in names_samples_and_areas[1:]:
-            bkg_sample, _ = np.histogram(sample, range=(self.lowerlim, self.upperlim), bins=bins)
+            bkg_sample, _ = np.histogram(sample, range=(self.lowerlim, self.upperlim), bins=self.bins)
             if scaleTo:
-                bkg_sample = Template_helper_methods.scale(area, bkg_sample)
-                self.scaled_bkgs[name] = (bkg_sample, bins)
+                bkg_sample = thm.scale(area, bkg_sample)
+                if name not in self.scaled_bkgs.keys():
+                    self.scaled_bkgs[name] = (bkg_sample, self.bins)
             overall += bkg_sample
         
-        return overall, bins
+        return overall, self.bins
 
 class Template_Creator_2D(Template_creator):
     def __init__(self, output_directory, fname, bkgs, bkgNames, bkg_areas, lowerlim, upperlim):
@@ -279,77 +297,124 @@ class Template_Creator_2D(Template_creator):
             
         return overall, binsx, binsy 
 
-class Interf_Coupling_template_creator(Template_Creator_2D): #WIP
+class Reso_template_creator_1D(Template_Creator_1D):
     def __init__(self, output_directory, fname, bkgs, bkgNames, bkg_areas, lowerlim, upperlim,
-                 pure1_weights, pure2_weights, interf_weights, weight_of_generation_hypothesis, mass_iterable,
-                 interf_name, pure1_name, pure2_name,
-                 bkg_pure1_weights, bkg_pure2_weights, bkg_interf_weights):
-        """CURRENTLY A WORK IN PROGRESS. Designed to be a 2d template between different hypotheses
+                 BW1, BW2, BW3,
+                 CS_BW1, CS_BW2, CS_BW3,
+                 nbins):
+        super().__init__(output_directory, fname, bkgs, bkgNames, bkg_areas, lowerlim, upperlim, nbins)
+        
+        self.signals["BW1"] = (np.array(BW1), CS_BW1)
+        BW1, _ = np.histogram(BW1, bins=self.bins, range=(lowerlim, upperlim)) #self.bins is managed by the parent class
+        BW1 = thm.scale(CS_BW1, BW1)
+        self.scaled_signals["BW1"] = (BW1/CS_BW1, self.bins)
+        
+        self.signals["BW2"] = (np.array(BW2), CS_BW2)
+        BW2, _ = np.histogram(BW2, bins=self.bins, range=(lowerlim, upperlim))
+        BW2 = thm.scale(CS_BW2, BW2)
+        self.scaled_signals["BW2"] = (BW2/CS_BW2, self.bins)
+        
+        self.signals["BW3"] = (np.array(BW3), CS_BW3)
+        BW3, _ = np.histogram(BW3, bins=self.bins, range=(lowerlim, upperlim))
+        BW3 = thm.scale(CS_BW3, BW3)
+        self.scaled_signals["BW3"] = (BW3/CS_BW3, self.bins)
+        
+    def dump(self):
+        """Dumps the created items in a file at self.output_directory/self.fname
+        """
+        with uproot.recreate(self.output_directory + self.fname + ".root") as f:
+            
+            for signal in self.scaled_signals.keys():
+                
+                if signal == "BW1" or signal == "BW2" or signal == "BW3": #treat the pure terms differently
+                    f["ggH_0PM_"+signal] = self.scaled_signals[signal]
+                else:
+                    interference_term, _ = self.scaled_signals[signal]
+                    
+                    pos = np.maximum(interference_term.copy(),0) #splits the template up into positive and negative as you're supposed to
+                    neg = -1*np.minimum(interference_term.copy(),0)
+                    
+                    # if np.any(pos):
+                    f["ggH_0PM_" + signal + "_positive"] = (pos, self.bins)
+                    # if np.any(neg):
+                    f["ggH_0PM_" + signal + "_negative"] = (neg, self.bins)
+
+            f["bkg_ggzz"] = self.scale_and_add_bkgs()
+        with uproot.recreate(self.output_directory + "bkgs.root") as f:
+            
+            f['bkg_total'] = self.scale_and_add_bkgs()
+            for name in self.scaled_bkgs.keys():
+                f[name] = self.scaled_bkgs[name]
+                print(name, np.sum(self.scaled_bkgs[name][0]))
+
+    def histo_based_on_params(self, N1, N2, N3, fname="scaled_hist"):
+        """Returns a histogram based on the 5 parameters that are fitted in the template
+        While not necessarily part of creating the template, this is a useful place to put this function
 
         Parameters
         ----------
-        output_directory : str
-            The directory you would like to output all your data in
-        fname : str
-            The filenames contained in all your outputs
-        bkgs : list[list[float]]
-            A list of background iterables. These can be lists of mass distriutions, lists of angle distributions, etc. bkgs is essentially a list of lists.
-        bkgNames : list[str]
-            A list of names for each background. This should be the same dimension as bkgs.
-        bkg_areas : list[Union[float, int]]
-            A list of areas for each background that you would like to scale to
-        lowerlim : float
-            The lower limit of your attribute's range (i.e. if it was phi, lowerlim would be -pi)
-        upperlim : float
-            The upper limit of your attribute's range (i.e. if it was phi, upperlim would be pi)
-        pure1_weights : list[float]
-            The weights for the first pure sample. Should be an iterable!
-        pure2_weights : list[float]
-            The weights for the second pure sample. Should be an iterable!
-        interf_weights : list[float]
-            The weights for the sample of the interference between the 2. Should be an iterable!
-        weight_of_generation_hypothesis : str
-            The weight for what the sample was generated at. This is used to normalize weights.
-        mass_iterable : list[float]
-            This is the mass iterable that you are using for one axis of the template
-        interf_name : str
-            The name of your interference sample
-        pure1_name : str
-            The name of your first pure sample
-        pure2_name : str
-            The name of your second pure sample
-        bkg_pure1_weights : list[float]
-            The weights of your background to your first pure sample's hypothesis
-        bkg_pure2_weights : list[float]
-            The weights of your background to your second pure sample's hypothesis
-        bkg_interf_weights : list[float]
-            The weights of your background to your interference sample's hypothesis
+        N1 : float
+            The number of events for BW1
+        N2 : float
+            The number of events for BW2
+        N3 : float
+            The number of events for BW3
+
+        Returns
+        -------
+        Tuple[list[float], list[float]]
+            A numpy histogram of everything
         """
-        super().__init__(output_directory, fname, bkgs, bkgNames, bkg_areas, lowerlim, upperlim)
         
-        self.discr_range = (-1,1)
+        scales = list(map(float, [N1, N2, N3]))
+        total = np.zeros(len(self.bins) - 1, dtype=float)
         
-        weight_of_generation_hypothesis = np.array(weight_of_generation_hypothesis)
-        self.signal_weights[pure1_name] = np.array(pure1_weights)/weight_of_generation_hypothesis
-        self.signal_weights[pure2_name] = np.array(pure2_weights)/weight_of_generation_hypothesis
+        plotslist = [] #this stores the plots
         
-        self.signal_weights[interf_name] = np.array(interf_weights)/weight_of_generation_hypothesis
-        self.signal_weights[interf_name] -= self.weights[pure1_name] + self.weights[pure2_name]
+        plt.figure()
+        for scale, signal in zip(scales, self.scaled_signals.keys()):
+            temp_counts = thm.scale(scale,self.scaled_signals[signal][0])
+            plotslist.append(temp_counts)
+            
+            if np.sum(np.abs(temp_counts)) != 0: #only bother plotting if the number of events is nonzero
+                hep.histplot(temp_counts, self.bins, label=signal, lw=3)
+                total += temp_counts
+            
+        if np.any(total < 0):
+            warnings.warn("Bins Cannot be Negative! Fix your Methodology!", RuntimeWarning)
         
-        mass_iterable = np.array(mass_iterable)
-        self.signals.update(dict.fromkeys([interf_name, pure1_name, pure2_name], mass_iterable ))
+        hep.histplot(total, self.bins, lw=4, label="all:" + "{:.1f}".format(np.sum(total)), color="black")
+        plt.gca().axhline(lw=2, color='black')
+        plt.legend(fontsize=12, loc='upper right')
+        titlestr = r"$N_1$={:.0f} $N_2$={:.0f} $N_3$={:.0f}".format(*scales)
+        plt.title(titlestr)
+        plt.xlabel(r"$m_{4\mu}[GeV]$")
+        plt.xlim(self.lowerlim, self.upperlim)
+        plt.savefig(fname+".png")
         
-        d_interference_signal = self.signal_weights[interf_name]
-        d_interference_signal /= 2*np.sqrt(self.signal_weights[pure1_name]*self.signal_weights[pure2_name])
+        plt.cla()
         
-        d_interference_bkg = bkg_interf_weights
-        d_interference_bkg /= 2*np.sqrt(bkg_pure1_weights*bkg_pure2_weights)
+        bkg_distrs = np.zeros(len(self.bins) - 1)
+        for bkg_name, (bkg, area) in self.bkgs.items():
+            bkg, _ = np.histogram(bkg, bins=self.bins, range=(self.lowerlim, self.upperlim))
+            bkg = thm.scale(area, bkg)
+            bkg_distrs += bkg
         
+        hep.histplot([bkg_distrs, total], label=["background", "signal"], bins=self.bins, lw=3, stack=True, 
+                     histtype="fill", color=['grey', 'w'], edgecolor=["k", "r"])
+        plt.title(titlestr)
+        plt.xlabel(r"$m_{4\mu}[GeV]$")
+        plt.xlim(self.lowerlim, self.upperlim)
+        plt.legend(fontsize=12, loc='upper right')
+        plt.savefig(fname+"_with_bkg.png")
+        
+        return plotslist + [total] #returns every count for the bins in a list
+    
 class Interf_Reso_template_creator_1D(Template_Creator_1D):
     def __init__(self, output_directory, fname, bkgs, bkgNames, bkg_areas, lowerlim, upperlim,
                  BW1_0_0, BW2_0_0, BW3_0_0, BW12_0_0, BW12_05_0, BW13_0_0, BW13_0_05, BW23_0_0, BW23_0_05,
                  CS_BW1, CS_BW2, CS_BW3, CS_BW12_0_0, CS_BW12_05_0, CS_BW13_0_0, CS_BW13_0_05, CS_BW23_0_0, CS_BW23_0_05,
-                 nbins, area1, area2, area3):
+                 nbins):
         """Initializes the 1D template for mass interference
 
         Parameters
@@ -406,19 +471,13 @@ class Interf_Reso_template_creator_1D(Template_Creator_1D):
             The cross section of the variable's name
         nbins : int
             The cross section of the variable's name
-        area1 : float
-            The cross section of the variable's name
-        area2 : float
-            The cross section of the variable's name
-        area3 : float
-            The cross section of the variable's name
         """
-        super().__init__(output_directory, fname, bkgs, bkgNames, bkg_areas, lowerlim, upperlim)
+        super().__init__(output_directory, fname, bkgs, bkgNames, bkg_areas, lowerlim, upperlim, nbins)
         self.string_forms = ["BW1", "BW2", "BW3", 
                         "BW1BW2_0_0", "BW1BW2_0.5_0", "BW1BW3_0_0", "BW1BW3_0_0.5", "BW2BW3_0_0", "BW2BW3_0_0.5"]
         #The 0.5 is for the physics model naming scheme
         
-        self.final_scaling_funcs = {#this is how the scaling goes for all 5 parameters
+        self.final_scaling_funcs = {#this is how the scaling goes for all 5 parameters. A dictionary of functions
             "BW1" : (lambda N, f1, f3, phi12, phi23: N*f1), 
             "BW2" : (lambda N, f1, f3, phi12, phi23: N*(1 - f1 - f3)), 
             "BW3" : (lambda N, f1, f3, phi12, phi23: N*f3), 
@@ -428,45 +487,37 @@ class Interf_Reso_template_creator_1D(Template_Creator_1D):
             "BW2BW3_0_0.5" : (lambda N, f1, f3, phi12, phi23 : N*np.sqrt((1-f1-f3)*f3)*np.sin(phi23)), 
             "BW1BW3_0_0" : (lambda N, f1, f3, phi12, phi23 : N*np.sqrt(f1*f3)*np.cos((phi12 - phi23))), 
             "BW1BW3_0_0.5" : (lambda N, f1, f3, phi12, phi23 : N*np.sqrt(f1*f3)*np.sin((phi23 - phi12)))
-            }
-        
-        normalization_factors = np.zeros(3, dtype=float)
-        
+        }
+            
         
         self.signals["BW1"] = (np.array(BW1_0_0), CS_BW1)
             
-        BW1_0_0, bins = np.histogram(BW1_0_0, bins=nbins, range=(lowerlim, upperlim))
-        BW1_0_0 = Template_helper_methods.scale(CS_BW1, BW1_0_0)
-        # BW1_0_0, normalization_factors[0] = Template_helper_methods.scale(1, BW1_0_0, return_scale_factor=True)
-        # BW1_0_0 /= CS_BW1
+        BW1_0_0, _ = np.histogram(BW1_0_0, bins=self.bins, range=(lowerlim, upperlim)) #self.bins is managed by the parent class
+        BW1_0_0 = thm.scale(CS_BW1, BW1_0_0)
         
-        self.scaled_signals["BW1"] = (BW1_0_0/CS_BW1, bins)
+        self.scaled_signals["BW1"] = (BW1_0_0/CS_BW1, self.bins)
         
         self.signals["BW2"] = (np.array(BW2_0_0), CS_BW2)
-        BW2_0_0, _ = np.histogram(BW2_0_0, bins=bins, range=(lowerlim, upperlim))
-        BW2_0_0 = Template_helper_methods.scale(CS_BW2, BW2_0_0)
-        # BW2_0_0, normalization_factors[1] = Template_helper_methods.scale(1, BW2_0_0, return_scale_factor=True)
-        # BW2_0_0 /= CS_BW2
+        BW2_0_0, _ = np.histogram(BW2_0_0, bins=self.bins, range=(lowerlim, upperlim))
+        BW2_0_0 = thm.scale(CS_BW2, BW2_0_0)
         
-        self.scaled_signals["BW2"] = (BW2_0_0/CS_BW2, bins)
+        self.scaled_signals["BW2"] = (BW2_0_0/CS_BW2, self.bins)
         
         self.signals["BW3"] = (np.array(BW3_0_0), CS_BW3)
-        BW3_0_0, _ = np.histogram(BW3_0_0, bins=bins, range=(lowerlim, upperlim))
-        BW3_0_0 = Template_helper_methods.scale(CS_BW3, BW3_0_0)
-        # BW3_0_0, normalization_factors[2] = Template_helper_methods.scale(1, BW3_0_0, return_scale_factor=True)
-        # BW3_0_0 /= CS_BW3
+        BW3_0_0, _ = np.histogram(BW3_0_0, bins=self.bins, range=(lowerlim, upperlim))
+        BW3_0_0 = thm.scale(CS_BW3, BW3_0_0)
         
-        self.scaled_signals["BW3"] = (BW3_0_0/CS_BW3, bins)
+        self.scaled_signals["BW3"] = (BW3_0_0/CS_BW3, self.bins)
         
         interfList = [BW12_0_0, BW12_05_0, BW13_0_0, BW13_0_05, BW23_0_0, BW23_0_05] #list of all the interference terms
         interfCSList = [CS_BW12_0_0, CS_BW12_05_0, CS_BW13_0_0, CS_BW13_0_05, CS_BW23_0_0, CS_BW23_0_05]
         
-        print(np.sum(BW1_0_0), np.sum(BW2_0_0), np.sum(BW3_0_0), normalization_factors)
+        print(np.sum(BW1_0_0), np.sum(BW2_0_0), np.sum(BW3_0_0))
         for n, interference_term in enumerate(interfList):
             
-            interference_term, _ = np.histogram(interference_term, bins=bins, range=(lowerlim, upperlim))            
+            interference_term, _ = np.histogram(interference_term, bins=self.bins, range=(lowerlim, upperlim))            
             self.signals[self.string_forms[n+3]] = (np.array(interference_term), interfCSList[n])
-            interference_term = Template_helper_methods.scale(interfCSList[n], interference_term)
+            interference_term = thm.scale(interfCSList[n], interference_term)
             
             dividing_to_normalize = 1
             subtraction_terms = np.zeros(len(BW1_0_0))
@@ -492,9 +543,8 @@ class Interf_Reso_template_creator_1D(Template_Creator_1D):
             print("Interference area subtracted down to", "{:.2e}".format(np.sum(interference_term)))
             interference_term = interference_term/dividing_to_normalize
             print("Final area of interference: ", np.sum(interference_term), np.sum(np.abs(interference_term)), '\n')
-            self.scaled_signals[self.string_forms[n+3]] = (interference_term, bins)
             
-        self.bins = bins
+            self.scaled_signals[self.string_forms[n+3]] = (interference_term, self.bins)
         
     def dump(self):
         """Dumps the created items in a file at self.output_directory/self.fname
@@ -502,28 +552,29 @@ class Interf_Reso_template_creator_1D(Template_Creator_1D):
         with uproot.recreate(self.output_directory + self.fname + ".root") as f:
             
             for signal in self.scaled_signals.keys():
-                
-                if signal == "BW1" or signal == "BW2" or signal == "BW3":
+                                
+                if signal == "BW1" or signal == "BW2" or signal == "BW3": #treat the pure terms differently
                     f["ggH_0PM_"+signal] = self.scaled_signals[signal]
                         
-                # # BW2_0_0 = Template_helper_methods.scale(BW2_0_0, area2)
+                # # BW2_0_0 = thm.scale(BW2_0_0, area2)
                 # f["ggH_0PM_BW2"] = self.scaled_signals["BW2"]
             
-                # # BW3_0_0 = Template_helper_methods.scale(BW3_0_0, area3)
+                # # BW3_0_0 = thm.scale(BW3_0_0, area3)
                 # f["ggH_0PM_BW3"] = self.scaled_signals["BW3"]
                 
                 else:
-                    interference_term, bins = self.scaled_signals[signal]
+                    interference_term, _ = self.scaled_signals[signal]
                     
                     pos = np.maximum(interference_term.copy(),0) #splits the template up into positive and negative as you're supposed to
                     neg = -1*np.minimum(interference_term.copy(),0)
                     
-                    if np.any(pos):
-                        f["ggH_0PM_" + signal + "_positive"] = (pos, bins)
-                    if np.any(neg):
-                        f["ggH_0PM_" + signal + "_negative"] = (neg, bins)
+                    # if np.any(pos):
+                    f["ggH_0PM_" + signal + "_positive"] = (pos, self.bins)
+                    # if np.any(neg):
+                    f["ggH_0PM_" + signal + "_negative"] = (neg, self.bins)
 
-            f["bkg_ggzz"] = self.scale_and_add_bkgs(bins, scaleTo=True)
+            f["bkg_ggzz"] = self.scale_and_add_bkgs()
+            
     
     def histo_based_on_params(self, N, f1, f3, phi12, phi23, fname="scaled_hist"):
         """Returns a histogram based on the 5 parameters that are fitted in the template
@@ -554,33 +605,76 @@ class Interf_Reso_template_creator_1D(Template_Creator_1D):
         params = [N, f1, f3, phi12, phi23]
         total = np.zeros(len(self.bins) - 1, dtype=float)
         params = list(map(float, params))
+        
+        plotslist = [] #this stores the plots
+        
         plt.figure()
         for signal in self.scaled_signals.keys():
             temp_counts = self.final_scaling_funcs[signal](*params)*self.scaled_signals[signal][0]
-            # temp_counts, _ = Template_helper_methods.scale(scalefactor, *self.scaled_signals[signal])
-            hep.histplot(temp_counts, self.bins, label=signal, lw=3)
-            total += temp_counts
+            plotslist.append(temp_counts)
+            
+            if np.sum(np.abs(temp_counts)) != 0: #only bother plotting if the number of events is nonzero
+                hep.histplot(temp_counts, self.bins, label=signal, lw=3)
+                total += temp_counts
             
         if np.any(total < 0):
             warnings.warn("Bins Cannot be Negative! Fix your Methodology!", RuntimeWarning)
         
         hep.histplot(total, self.bins, lw=4, label="all:" + "{:.1f}".format(np.sum(total)), color="black")
         plt.gca().axhline(lw=2, color='black')
-        plt.legend(fontsize=12, loc='lower right')
+        plt.legend(fontsize=12, loc='upper right')
         titlestr = ""
         for name, i in param_dict.items():
             try:
-                if "phi" in name:
-                    titlestr += name + ": {:.2f} ".format(float(i))# + r"$\pi$ "
-                else:
-                    titlestr += name + ": {:.2f} ".format(float(i))
+                if "phi" in name and not self.interferenceOn: #Ignore phi if there is no interference
+                    continue
+                titlestr += name + ": {:.2f} ".format(float(i))
             except:
                 pass
         plt.title(titlestr)
         plt.xlabel(r"$m_{4\mu}[GeV]$")
         plt.xlim(self.lowerlim, self.upperlim)
         plt.savefig(fname+".png")
+        
+        plt.cla()
+        
+        bkg_distrs = np.zeros(len(self.bins) - 1)
+        for bkg_name, (bkg, area) in self.bkgs.items():
+            bkg, _ = np.histogram(bkg, bins=self.bins, range=(self.lowerlim, self.upperlim))
+            bkg = thm.scale(area, bkg)
+            bkg_distrs += bkg
+        
+        hep.histplot([bkg_distrs, total], label=["background", "signal"], bins=self.bins, lw=3, stack=True, 
+                     histtype="fill", color=['grey', 'w'], edgecolor=["k", "r"])
+        plt.title(titlestr)
+        plt.xlabel(r"$m_{4\mu}[GeV]$")
+        plt.xlim(self.lowerlim, self.upperlim)
+        plt.legend(fontsize=12, loc='upper right')
+        plt.savefig(fname+"_with_bkg.png")
+        
         return total, self.bins
+    
+    
+    def animate_over_scan(self, scanfile, scanval):
+        if not os.path.isfile(scanfile):
+            raise FileNotFoundError(scanfile + " not found!")
+        
+        
+        with uproot.open(scanfile) as scan:
+            scan_data = scan['limit'].arrays(['N', 'RPhi12', 'RPhi23', 'RBW1', 'RBW2', 'RBW2_rel' ,'RBW3', 'deltaNLL'], library='pd')
+            scan_data['deltaNLL'] *= 2
+            scan_data = scan_data(scanval, ignore_index=True)
+            
+            print(scan_data)
+        
+
+        plt.cla()
+        fig, axs = plt.subplots(1, 2)
+        def prepare_animation(n):
+            for ax in axs:
+                ax.cla()
+                ax.tick_params(axis='both', which='major', labelsize=20)
+    
     
     def check_for_correct_formulation(self, iters=10):
         """Checks Whether your formulation EVER returns a negative bin!
@@ -631,6 +725,7 @@ class Interf_Reso_template_creator_1D(Template_Creator_1D):
         mihm.plot_overall_interference(list(self.scaled_signals.values()), list(self.scaled_signals.keys()), 
                                         self.output_directory, self.fname+"interference")
 
+
 class Significance_Hypothesis_template_creator_1D(Template_Creator_1D):
     def __init__(self, output_directory, fname, bkgs, bkgNames, bkg_areas, lowerlim, upperlim,
                  signal1, signal1_name, signal2, signal2_name, signal_area, nbins):
@@ -639,12 +734,12 @@ class Significance_Hypothesis_template_creator_1D(Template_Creator_1D):
         with uproot.recreate(self.output_directory + self.fname + ".root") as f:
             self.signals[signal1_name] = signal1
             signal1, bins = np.histogram(signal1, bins=nbins, range=(lowerlim, upperlim))
-            signal1 = Template_helper_methods.scale(signal_area, signal1)
+            signal1 = thm.scale(signal_area, signal1)
             f["ggH_0PM"] = (signal1, bins)
             
             self.signals[signal2_name] = signal2
             signal2, _ = np.histogram(signal2, bins=bins, range=(lowerlim, upperlim))
-            signal2 = Template_helper_methods.scale(signal_area, signal2)
+            signal2 = thm.scale(signal_area, signal2)
             f["ggH_0M"] = (signal2, bins)
             
             f["bkg_ggzz"] = self.scale_and_add_bkgs(bins, scaleTo=True)

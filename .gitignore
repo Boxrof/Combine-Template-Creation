@@ -4,3 +4,5 @@ __pycache__/*
 *.pickle
 *.pdf
 *.png
+command*.txt
+run*.sh

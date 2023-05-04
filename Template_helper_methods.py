@@ -62,6 +62,9 @@ def scale(scaleto, counts, bins=[], return_scale_factor=False):
     signs = np.sign(counts) #makes sure to preserve sign
     counts = np.abs(counts)
     
+    if scaleto == 0:
+        return scaleto*counts
+    
     if any(bins):
         if return_scale_factor:
             return signs*counts*scaleto/np.sum(counts), bins, scaleto/np.sum(counts)
@@ -211,7 +214,7 @@ def Unroll_2D_OnShell(directory, fname):
         
 
 def killPoints(x, y, tolerance=0.0):
-    """This function kills all "spikes" in a plot, assuming them to be unnatural
+    """This function kills all "spikes" in a plot of a scan assuming them to be unnatural
 
     Parameters
     ----------
@@ -225,31 +228,20 @@ def killPoints(x, y, tolerance=0.0):
 
     Returns
     -------
-    _type_
-        _description_
+    Tuple[numpy.array[float]]
+        The x and y values with all the points killed
 
     Raises
     ------
     ValueError
-        _description_
+        Arrays must be of equal length
     """
     if len(x) != len(y):
         raise ValueError("Arrays must be of equal size!")
-    # for i, (px, py) in enumerate(zip(x,y)):
-    #     if i == 0 or i == len(y):
-    #         continue
-    #     if py > y[i-1] and py > y[i+1]:
-    #         recorded_indices.append(i)
-    #         print("value of",px,py,"will be killed!")
-            
-    # x = np.array(x)
-    # y = np.array(y)
-    # print(recorded_indices)
-    # return np.delete(x, recorded_indices), np.delete(y, recorded_indices)
     
     still_need_to_kill = True
-    x = np.array(x)
-    y = np.array(y)
+    x = np.array(x, dtype=float)
+    y = np.array(y, dtype=float)
     
     if tolerance < 1:
         tolerance += 1 #to make multiplication easier
@@ -263,10 +255,35 @@ def killPoints(x, y, tolerance=0.0):
               and np.abs(y[i]) > np.abs(y[i-1])*tolerance and np.abs(y[i]) > np.abs(y[i+1])*tolerance):
             
             x, y = np.delete(x, i), np.delete(y, i) #delete the x and y values
-            print("killed point", y[i])
+            print("killed point ({:.2f}, {:.2f})".format(x[i], y[i]) )
             i = 1 #reset the indexing to 1 (since there cannot be a "spike" at the first position) and restart the search
         
         else:
             i += 1 #move the index up
     
     return x, y
+
+
+def interpolate_uncertainty(known_y, x0, y0, x1, y1):
+    """Linearly interpolates a given x value for a known y value from two sets of x,y pairs
+    Performs better the closer the x,y pairs are
+
+    Parameters
+    ----------
+    known_y : float
+        The y value whose x value this function is solving for
+    x0 : float
+        the first x value
+    y0 : float
+        the first y value
+    x1 : float
+        the second x value
+    y1 : float
+        the second y value
+
+    Returns
+    -------
+    float
+        the x value for a given y
+    """
+    return (known_y - y0)*(x1 - x0)/(y1 - y0) + x0
